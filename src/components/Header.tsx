@@ -1,11 +1,25 @@
 
 import React, { useState } from 'react';
-import { Search, ShoppingCart, User, Menu } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const { user, signOut, loading } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success('Signed out successfully');
+      setShowUserMenu(false);
+    } catch (error) {
+      toast.error('Error signing out');
+    }
+  };
 
   return (
     <header className="bg-gray-900 text-white">
@@ -16,9 +30,35 @@ const Header = () => {
             <span>Deliver to: New York 10001</span>
           </div>
           <div className="flex items-center space-x-4">
-            <Link to="/signin" className="hover:text-orange-400 transition-colors">
-              Sign In
-            </Link>
+            {!loading && (
+              <>
+                {user ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="hover:text-orange-400 transition-colors flex items-center space-x-1"
+                    >
+                      <span>Hello, {user.email?.split('@')[0]}</span>
+                    </button>
+                    {showUserMenu && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                        <button
+                          onClick={handleSignOut}
+                          className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Link to="/auth" className="hover:text-orange-400 transition-colors">
+                    Sign In
+                  </Link>
+                )}
+              </>
+            )}
             <span>Returns & Orders</span>
             <span>Cart</span>
           </div>
@@ -64,7 +104,7 @@ const Header = () => {
             <div className="hidden md:flex items-center space-x-1">
               <User className="w-5 h-5" />
               <div className="text-sm">
-                <div>Hello, Sign in</div>
+                <div>Hello, {user ? user.email?.split('@')[0] : 'Sign in'}</div>
                 <div className="font-bold">Account & Lists</div>
               </div>
             </div>
